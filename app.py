@@ -6,35 +6,51 @@ import base64
 
 app = Flask(__name__)
 
-def calculate_slt(synchronous_lecture, synchronous_activities, synchronous_assessment,
-                   asynchronous_lecture, asynchronous_activities, asynchronous_assessment,
-                   synchronous_lecture_prep, synchronous_activities_prep, synchronous_assessment_prep,
-                   asynchronous_lecture_prep, asynchronous_activities_prep, asynchronous_assessment_prep):
+# Function to calculate SLT and generate a correctly scaled graph
+def calculate_slt(slt_type, synchronous_lecture, synchronous_activities, synchronous_assessment,
+                  asynchronous_lecture, asynchronous_activities, asynchronous_assessment,
+                  synchronous_lecture_prep, synchronous_activities_prep, synchronous_assessment_prep,
+                  asynchronous_lecture_prep, asynchronous_activities_prep, asynchronous_assessment_prep):
+
     total_synchronous = (synchronous_lecture + synchronous_activities + synchronous_assessment +
                           synchronous_lecture_prep + synchronous_activities_prep + synchronous_assessment_prep)
+
     total_asynchronous = (asynchronous_lecture + asynchronous_activities + asynchronous_assessment +
                            asynchronous_lecture_prep + asynchronous_activities_prep + asynchronous_assessment_prep)
+
     total_slt = total_synchronous + total_asynchronous
 
-    if total_slt != 120:
-        warning = "Warning: Total SLT should be exactly 120 hours."
+    # Set SLT version constraints dynamically
+    slt_versions = {
+        "80": {"max_slt": 80, "min_async": 24, "max_async": 48},
+        "120": {"max_slt": 120, "min_async": 36, "max_async": 72},
+        "160": {"max_slt": 160, "min_async": 48, "max_async": 96}
+    }
+
+    if slt_type not in slt_versions:
+        return None, "Invalid SLT type!", ""
+
+    max_slt = slt_versions[slt_type]["max_slt"]
+    min_async = slt_versions[slt_type]["min_async"]
+    max_async = slt_versions[slt_type]["max_async"]
+
+    # Check if total SLT matches the selected SLT version
+    if total_slt != max_slt:
+        warning = f⚠️ Warning: Total SLT should be exactly {max_slt} hours!"
     else:
         warning = ""
 
-    # Color logic: Red if < 36 hours or > 72 hours, Green otherwise
-    if total_asynchronous < 36 or total_asynchronous > 72:
-        bar_color = 'red'
-    else:
-        bar_color = 'green'
+    # Set bar color: Green if async is between min and max, otherwise red
+    bar_color = 'green' if min_async <= total_asynchronous <= max_async else 'red'
 
-    # Generate plot
+    # Generate the plot with dynamic y-axis
     fig, ax = plt.subplots()
     ax.bar(['Asynchronous Learning Hours'], [total_asynchronous], color=bar_color)
-    ax.axhline(y=36, color='black', linestyle='--', label='Minimum 36 Hours')
-    ax.axhline(y=72, color='black', linestyle='--', label='Maximum 72 Hours')
-    ax.set_ylim(0, 120)  # Set limit to full 120 hours
+    ax.axhline(y=min_async, color='black', linestyle='--', label=f'Minimum {min_async} Hours (30%)')
+    ax.axhline(y=max_async, color='black', linestyle='--', label=f'Maximum {max_async} Hours (60%)')
+    ax.set_ylim(0, max_slt)  # Dynamically set the y-axis max based on SLT version
     ax.set_ylabel("Hours of Asynchronous Learning")
-    ax.set_title("Student Learning Time Distribution")
+    ax.set_title(f"Student Learning Time Distribution ({max_slt} Hours)")
     ax.legend()
 
     # Convert plot to image
@@ -50,13 +66,17 @@ def calculate_slt(synchronous_lecture, synchronous_activities, synchronous_asses
 def index():
     if request.method == 'POST':
         data = request.form
+        slt_type = data['slt_type']  # Get SLT type (80, 120, or 160)
+
         total_asynchronous, warning, graph_url = calculate_slt(
+            slt_type,
             int(data['synchronous_lecture']), int(data['synchronous_activities']), int(data['synchronous_assessment']),
             int(data['asynchronous_lecture']), int(data['asynchronous_activities']), int(data['asynchronous_assessment']),
             int(data['synchronous_lecture_prep']), int(data['synchronous_activities_prep']), int(data['synchronous_assessment_prep']),
             int(data['asynchronous_lecture_prep']), int(data['asynchronous_activities_prep']), int(data['asynchronous_assessment_prep'])
         )
         return jsonify({'total_asynchronous': total_asynchronous, 'warning': warning, 'graph_url': graph_url})
+
     return render_template('index.html', developer_name="Developed by [Rohayati Paidi]")
 
 if __name__ == '__main__':
