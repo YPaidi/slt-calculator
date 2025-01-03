@@ -17,7 +17,7 @@ def calculate_slt(synchronous_lecture, synchronous_activities, synchronous_asses
     total_slt = total_synchronous + total_asynchronous
 
     if total_slt != 120:
-        warning = ⚠️ Warning: Total SLT should be exactly 120 hours!"
+        warning = "Warning: Total SLT should be exactly 120 hours."
     else:
         warning = ""
 
