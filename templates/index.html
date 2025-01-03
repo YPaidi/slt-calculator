@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLT Calculator</title>
+    <script>
+        function calculateSLT(event) {
+            event.preventDefault();
+            let formData = new FormData(document.getElementById('sltForm'));
+
+            fetch("/", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = 
+                    `<p>Asynchronous Learning Percentage: ${data.async_percentage.toFixed(2)}%</p>
+                     <p style="color: ${data.async_percentage < 36 ? 'red' : 'green'}">${data.warning}</p>
+                     <img src="data:image/png;base64,${data.graph_url}" alt="SLT Graph">`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <h1>SLT Calculator</h1>
+    <form id="sltForm" onsubmit="calculateSLT(event)">
+        <h3>Synchronous Learning</h3>
+        <label>Lecture: <input type="number" name="synchronous_lecture" required></label>
+        <label>Activities: <input type="number" name="synchronous_activities" required></label>
+        <label>Assessment: <input type="number" name="synchronous_assessment" required></label>
+        <label>Lecture Preparation: <input type="number" name="synchronous_lecture_prep" required></label>
+        <label>Activities Preparation: <input type="number" name="synchronous_activities_prep" required></label>
+        <label>Assessment Preparation: <input type="number" name="synchronous_assessment_prep" required></label>
+
+        <h3>Asynchronous Learning</h3>
+        <label>Lecture: <input type="number" name="asynchronous_lecture" required></label>
+        <label>Activities: <input type="number" name="asynchronous_activities" required></label>
+        <label>Assessment: <input type="number" name="asynchronous_assessment" required></label>
+        <label>Lecture Preparation: <input type="number" name="asynchronous_lecture_prep" required></label>
+        <label>Activities Preparation: <input type="number" name="asynchronous_activities_prep" required></label>
+        <label>Assessment Preparation: <input type="number" name="asynchronous_assessment_prep" required></label>
+
+        <button type="submit">Calculate</button>
+    </form>
+    <div id="result"></div>
+<footer>
+    <p>{{ developer_name }}</p>
+</footer>
+</body>
+</html>
