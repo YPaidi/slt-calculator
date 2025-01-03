@@ -36,7 +36,7 @@ def calculate_slt(slt_type, synchronous_lecture, synchronous_activities, synchro
 
     # Check if total SLT matches the selected SLT version
     if total_slt != max_slt:
-        warning = f⚠️ Warning: Total SLT should be exactly {max_slt} hours!"
+        warning = f"Warning: Total SLT should be exactly {max_slt} hours."
     else:
         warning = ""
 
